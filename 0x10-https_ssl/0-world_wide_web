@@ -1,23 +1,14 @@
 #!/usr/bin/env bash
-# Configure my domain zone:
+# Audit domain and sub-domains
 
-subdomains_all=( "www" "lb-01" "web-01" "web-02" )
-
-runDig () {
-    subdomain=$1
-    domain=$2
-
-    dig "$subdomain.$domain" | grep -A1 'ANSWER SECTION:' | tail -1 | awk -v s="$subdomain" 'BEGIN { FS = " " } ; { print "The subdomain " s " is a " $4 " record and points to " $5 }'
-}
-
-if [ $# -eq 1 ]; then
-    domain="$1"
-    for i in "${subdomains_all[@]}"
+if [ $# -eq 1 ];
+then
+    sub_domains=('www' 'lb-01' 'web-01' 'web-02')
+    for sub in "${sub_domains[@]}";
     do
-	runDig "$i" "$domain"
+    dig "$sub"."$1" | grep -A1 'ANSWER SECTION:' | awk -v SUB="$sub" '{if (NR==2) print ("The subdomain", SUB ,"is a", $4 ,"record and points to", $5)}'
     done
-elif [ $# -eq 2 ]; then
-    domain="$1"
-    subdomain="$2"
-    runDig "$subdomain" "$domain"
+elif [ $# -eq 2 ];
+then
+    dig "$2"."$1" | grep -A1 'ANSWER SECTION:' | awk -v SUB="$2" '{if (NR==2) print ("The subdomain", SUB ,"is a", $4 ,"record and points to", $5)}'
 fi
